@@ -1,0 +1,8 @@
+Pushshift API
+https://rareloot.medium.com/using-pushshifts-api-to-extract-reddit-submissions-fb517b286563
+Pushshift Reddit API Documentation
+https://github.com/pushshift/api
+Praw:
+https://towardsdatascience.com/scraping-reddit-data-1c0af3040768
+Sentiment Analysis + Script:
+https://medium.com/analytics-vidhya/sentiment-analysis-for-trading-with-reddit-text-data-73729c931d01
