@@ -46,19 +46,27 @@ class data_mining:
         r = requests.get(url)
         data = json.loads(r.text)
         return data['data']
-    
+
+time_period = 60
+data_count = 0
 start_date = datetime.date(2021, 1, 11)
 end_date = datetime.date(2021, 2, 5)
 delta = datetime.timedelta(days=1)
 current_date = start_date
 while current_date <= end_date:
+    data = []
     start_epoch=data_mining().epoch_datatime(current_date)
     end_epoch=data_mining().epoch_datatime(current_date+delta)
-    data = data_mining().getPushshiftData_Comment('gamestop', start_epoch, end_epoch, 'wallstreetbets', 500)
-    print(data)
+    current_epoch_by_hour = start_epoch
+    while current_epoch_by_hour<=end_epoch:
+        temp_data = data_mining().getPushshiftData_Comment('gamestop', current_epoch_by_hour, current_epoch_by_hour+60, 'wallstreetbets', 500)
+        current_epoch_by_hour += 60
+        data.extend(temp_data)
     if len(data) == 0:
             continue
     else:
         df = pd.DataFrame(data)
+        data_count += df.shape[0]
+        print('Data Count: ', data_count)
         df.to_csv('/Users/yw511/VSCode/Machine Learning/reddit-investment-sentiment/data/wsb_'+str(current_date)+'.csv', index=False)
     current_date += delta
