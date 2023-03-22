@@ -64,6 +64,7 @@ class RedditPost:
                     self.flush(file_path, posts)
                     posts = []
                     i=0
+                line = f.readline()
         if i>0:
             self.flush(file_path, posts)
 
