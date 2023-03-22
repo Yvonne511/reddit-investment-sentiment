@@ -36,30 +36,35 @@ class RedditPost:
             reply["comments"].append(self.get_reply(comment))
         return reply
 
-    def get_new(self, file_path):
+    def get_new(self, submissions_file, file_path):
         with open(file_path, "w") as f:
             pass
         i = 0
         posts = []
-        for submission in self.subreddit.new(limit=None):
-            # submission.comment_sort = "new"
-            # submission.comments.replace_more(limit=None)
-            post = {}
-            post["title"] = submission.title
-            post["text"] = submission.selftext.replace("\n", " ")
-            post["time"] = submission.created
-            comments = []
-            for comment in submission.comments:
-                if isinstance(comment, MoreComments):
-                    continue
-                comments.append(self.get_reply(comment))
-            post["comments"] = comments
-            posts.append(post)
-            i+=1
-            if i==10:
-                self.flush(file_path, posts)
-                posts = []
-                i=0
+        with open(submissions_file, "r") as f:
+            line = f.readline()
+            while line:
+                id = line.replace("\n","")
+                submission = self.reddit.submission(id)
+                # submission.comment_sort = "new"
+                # submission.comments.replace_more(limit=None)
+                post = {}
+                post["title"] = submission.title
+                post["text"] = submission.selftext.replace("\n", " ")
+                post["time"] = submission.created
+                comments = []
+                for comment in submission.comments:
+                    if isinstance(comment, MoreComments):
+                        continue
+                    comments.append(self.get_reply(comment))
+                post["comments"] = comments
+                posts.append(post)
+                i+=1
+                if i==10:
+                    self.flush(file_path, posts)
+                    posts = []
+                    i=0
+                line = f.readline()
         if i>0:
             self.flush(file_path, posts)
 
@@ -69,7 +74,10 @@ if __name__ == '__main__':
 
     reddit_post = RedditPost()
     reddit_post.set_subreddit("GameStop")
-    reddit_post.get_new("./GameStop.txt")
+    submissions_file = "PATH TO ID OF SUBMISSION(POST)"
+    reddit_post.get_new(submissions_file, "./GameStop.txt")
+
+
 
 
 
