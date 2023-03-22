@@ -18,10 +18,17 @@ class data_mining_submission:
         return int((dt - epoch_start).total_seconds())
     
     def getPushshiftData_Submission(self, query, after, before, sub, size = 500):
-        url = 'https://api.pushshift.io/reddit/search/submission?q='+str(query)+'&subreddit='+str(sub)+'&after='+str(after)+'&before='+str(before)+'&size='+str(size)
-        print(url)
-        r = requests.get(url)
-        data = json.loads(r.text)
+        data = None
+        while not data:
+            try:
+                url = 'https://api.pushshift.io/reddit/search/submission?q='+str(query)+'&subreddit='+str(sub)+'&after='+str(after)+'&before='+str(before)+'&size='+str(size)
+                # print(url)
+                r = requests.get(url)
+                data = json.loads(r.text)
+            except:
+                time.sleep(5)
+        if len(data['data'])==500:
+            print(str(after)+ ": "+str(len(data['data'])))
         return data['data']
 
 time_period = 60
@@ -34,15 +41,16 @@ while current_date <= end_date:
     data = []
     start_epoch=data_mining_submission().epoch_datatime(current_date)
     end_epoch=data_mining_submission().epoch_datatime(current_date+delta)
-    current_epoch_by_hour = start_epoch
-    while current_epoch_by_hour<=end_epoch:
-        temp_data = data_mining_submission().getPushshiftData_Submission('gamestop', current_epoch_by_hour, current_epoch_by_hour+60, 'wallstreetbets', 500)
-        current_epoch_by_hour += 60
-
+    current_epoch_by_minutes = start_epoch
+    while current_epoch_by_minutes<=end_epoch:
+        temp_data = data_mining_submission().getPushshiftData_Submission('gamestop', current_epoch_by_minutes, current_epoch_by_minutes+60, 'wallstreetbets', 500)
+        current_epoch_by_minutes += 60
+        date_time = datetime.datetime.fromtimestamp( current_epoch_by_minutes )  
+        print(date_time)
         for d in temp_data:
             new_d = {"id":d["id"], "utc_datetime_str":d["utc_datetime_str"], "body":d["selftext"]}
             data.append(new_d)
-
+    
     if len(data) == 0:
             continue
     else:
