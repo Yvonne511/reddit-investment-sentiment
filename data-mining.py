@@ -79,6 +79,7 @@ while current_date <= end_date:
     else:
         df = pd.DataFrame(data)
         data_count += df.shape[0]
-        print('Data Count: ', data_count)
+        print('Data Count: ', df.shape[0])
         df.to_csv('./gamestop/wsb_'+str(current_date)+'.csv', index=False)
     current_date += delta
+print ('Total Data Count: ', data_count)
