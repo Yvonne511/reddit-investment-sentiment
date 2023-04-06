@@ -72,6 +72,7 @@ while current_date <= end_date:
 
         for d in temp_data:
             new_d = {"id":d["id"], "utc_datetime_str":d["utc_datetime_str"], "body":d["body"]}
+            print(new_d)
             data.append(new_d)
 
     if len(data) == 0:
