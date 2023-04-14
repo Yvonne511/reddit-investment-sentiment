@@ -3,6 +3,8 @@ from praw.models import MoreComments
 import json
 from datetime import datetime
 import toml
+import os
+
 
 class RedditPost:
     def __init__(self):
@@ -26,6 +28,8 @@ class RedditPost:
         print("Last post time:", datetime.fromtimestamp(last_time).strftime("%Y-%m-%d %H:%M:%S"))
 
     def get_reply(self, target):
+
+        self.count += 1
         reply = {}
         reply["text"] = target.body.replace("\n", " ")
         reply["time"] = target.created_utc
@@ -37,17 +41,19 @@ class RedditPost:
         return reply
 
     def get_new(self, submissions_file, file_path):
+        self.count = 0
         with open(file_path, "w") as f:
             pass
         i = 0
         posts = []
-        with open(submissions_file, "r") as f:
+        with open(submissions_file, "r", encoding="utf8") as f:
+            f.readline()
             line = f.readline()
             while line:
-                id = line.replace("\n","")
+                id = line[:6]
                 submission = self.reddit.submission(id)
                 # submission.comment_sort = "new"
-                # submission.comments.replace_more(limit=None)
+                submission.comments.replace_more(limit=0)
                 post = {}
                 post["title"] = submission.title
                 post["text"] = submission.selftext.replace("\n", " ")
@@ -67,17 +73,18 @@ class RedditPost:
                 line = f.readline()
         if i>0:
             self.flush(file_path, posts)
+        print(f"count: {self.count}")
 
 
 
 if __name__ == '__main__':
 
     reddit_post = RedditPost()
-    reddit_post.set_subreddit("GameStop")
-    submissions_file = "PATH TO ID OF SUBMISSION(POST)"
-    reddit_post.get_new(submissions_file, "./GameStop.txt")
-
-
-
-
-
+    # reddit_post.set_subreddit("GameStop")
+    data_dir = "./gamestop/submissions"
+    for root, dirs, files in os.walk(data_dir):
+        for file in files:
+            if file.endswith(".csv"):
+                print(file)
+                submissions_file = os.path.join(root, file)
+                reddit_post.get_new(submissions_file, os.path.join("./", "gamestop", "comments", file[:-3]+"txt"))
