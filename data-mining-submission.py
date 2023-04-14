@@ -44,8 +44,9 @@ while start_epoch <= end_epoch:
         new_d = {"id":d["id"], "utc_datetime_str":d["utc_datetime_str"], "body":d["selftext"], "title":d["title"], 'upvote_ratio':d['upvote_ratio']}
         temp_array.append(new_d)
     print('Date', start_epoch, 'is Completed.')
-    if len(data) == 0:
+    if len(temp_array) == 0:
         print('No Data')
+        start_epoch += delta
     else:
         temp_df = pd.DataFrame(temp_array)
         data_count += temp_df.shape[0]
@@ -76,9 +77,9 @@ while start_epoch <= end_epoch:
                         break
         else:
             data.append(temp_df)
-        temp_df = None
-        temp_array = []
-        start_epoch += delta
+            temp_df = None
+            temp_array = []
+            start_epoch += delta
 print ('Total Data Count: ', data_count)
 print ('Over 500: ', over500)
 df = pd.DataFrame(data)
