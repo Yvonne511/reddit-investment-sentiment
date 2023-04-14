@@ -22,45 +22,64 @@ class data_mining_submission:
         while not data:
             try:
                 url = 'https://api.pushshift.io/reddit/search/submission?q='+str(query)+'&subreddit='+str(sub)+'&after='+str(after)+'&before='+str(before)+'&size='+str(size)
+                print(url)
                 r = requests.get(url)
                 data = json.loads(r.text)
-                print(url)
             except:
                 time.sleep(5)
-        if len(data['data'])==500:
-            print(str(after)+ ": "+str(len(data['data'])))
         return data['data']
 
-time_period = 60
 data_count = 0
 start_date = datetime.date(2021, 1, 25)
+start_epoch = data_mining_submission().epoch_datatime(start_date)
 end_date = datetime.date(2021, 2, 5)
-delta = datetime.timedelta(days=1)
-current_date = start_date
-while current_date <= end_date:
-    data = []
-    # start_epoch=data_mining_submission().epoch_datatime(current_date)
-    # end_epoch=data_mining_submission().epoch_datatime(current_date+delta)
-    # current_epoch_by_minutes = start_epoch
-    # while current_epoch_by_minutes<=end_epoch:
-    #     temp_data = data_mining_submission().getPushshiftData_Submission('gamestop', current_epoch_by_minutes, current_epoch_by_minutes+60, 'wallstreetbets', 500)
-    #     current_epoch_by_minutes += 60
-    #     date_time = datetime.datetime.fromtimestamp( current_epoch_by_minutes )  
-    #     print(date_time)
-    #     for d in temp_data:
-    #         new_d = {"id":d["id"], "utc_datetime_str":d["utc_datetime_str"], "body":d["selftext"]}
-    #         data.append(new_d)
-    temp_data = data_mining_submission().getPushshiftData_Submission('gamestop', current_date, current_date+delta, 'wallstreetbets', 500)
+end_epoch = data_mining_submission().epoch_datatime(end_date)
+delta = 1800
+data = []
+over500 = 0
+while start_epoch <= end_epoch:
+    temp_array = []
+    temp_data = data_mining_submission().getPushshiftData_Submission(' GME ', start_epoch, start_epoch+delta, 'wallstreetbets', 500)
     for d in temp_data:
-        new_d = {"id":d["id"], "utc_datetime_str":d["utc_datetime_str"], "body":d["selftext"]}
-        data.append(new_d)
-    print('Date', current_date, 'is Completed.')
+        new_d = {"id":d["id"], "utc_datetime_str":d["utc_datetime_str"], "body":d["selftext"], "title":d["title"], 'upvote_ratio':d['upvote_ratio']}
+        temp_array.append(new_d)
+    print('Date', start_epoch, 'is Completed.')
     if len(data) == 0:
         print('No Data')
     else:
-        df = pd.DataFrame(data)
-        data_count += df.shape[0]
-        print('Data Count: ', df.shape[0])
-        df.to_csv('./data-submission/wsb_'+str(current_date)+'.csv', index=False)
-    current_date += delta
+        temp_df = pd.DataFrame(temp_array)
+        data_count += temp_df.shape[0]
+        print('Data Count: ', temp_df.shape[0])
+        if temp_df.shape[0] >= 400:
+            over500 += 1
+            new_delta = 60
+            while start_epoch<=start_epoch+delta:
+                temp_array = []
+                temp_data = data_mining_submission().getPushshiftData_Submission(' GME ', start_epoch, start_epoch+new_delta, 'wallstreetbets', 500)
+                for d in temp_data:
+                    new_d = {"id":d["id"], "utc_datetime_str":d["utc_datetime_str"], "body":d["selftext"], "title":d["title"], 'upvote_ratio':d['upvote_ratio']}
+                    temp_array.append(new_d)
+                print('Date', start_epoch, 'is Completed with new delta.')
+                if len(data) == 0:
+                    print('No Data')
+                else:
+                    temp_df = pd.DataFrame(temp_array)
+                    data_count += temp_df.shape[0]
+                    print('Data Count: ', temp_df.shape[0])
+                    if temp_df.shape[0] >= 500:
+                        print('Over 500 with new delta')
+                    else:
+                        data.append(temp_df)
+                        temp_df = None
+                        temp_array = []
+                        start_epoch += new_delta
+                        break
+        else:
+            data.append(temp_df)
+        temp_df = None
+        temp_array = []
+        start_epoch += delta
 print ('Total Data Count: ', data_count)
+print ('Over 500: ', over500)
+df = pd.DataFrame(data)
+df.to_csv('./data-submission/wsb_submission.csv', index=False)
