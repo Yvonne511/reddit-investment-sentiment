@@ -63,7 +63,7 @@ class RedditPost:
                 try:
                     submission.comments.replace_more(limit=0)
                 except Forbidden:
-                    print(f"banned on id:{id}!")
+                    # print(f"banned on id:{id}!")
                     line = f.readline()
                     continue
                 except ServerError:
@@ -95,13 +95,13 @@ class RedditPost:
 if __name__ == '__main__':
 
     reddit_post = RedditPost()
-    data_dir = "./all_reddit/submissions"
-    for root, dirs, files in os.walk(data_dir):
+    data_dir = "all_reddit"
+    for root, dirs, files in os.walk(os.path.join(data_dir, "submissions")):
         for file in files:
             if file.endswith(".csv"):
                 print(file)
                 submissions_file = os.path.join(root, file)
-                reddit_post.get_new(submissions_file, os.path.join("./", "all_reddit", "comments", file[:-3]+"txt"))
+                reddit_post.get_new(submissions_file, os.path.join("./", data_dir, "comments", file[:-3]+"txt"))
 
 
 
