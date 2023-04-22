@@ -4,7 +4,10 @@ import json
 from datetime import datetime
 import toml
 import os
-
+import csv
+import time
+from prawcore.exceptions import Forbidden
+from prawcore.exceptions import ServerError
 
 class RedditPost:
     def __init__(self):
@@ -25,7 +28,7 @@ class RedditPost:
                 json.dump(content, f, separators=(',', ':'))
                 f.write("\n")
         last_time = contents[-1]["time"]
-        print("Last post time:", datetime.fromtimestamp(last_time).strftime("%Y-%m-%d %H:%M:%S"))
+        # print("Last post time:", datetime.fromtimestamp(last_time).strftime("%Y-%m-%d %H:%M:%S"))
 
     def get_reply(self, target):
 
@@ -51,9 +54,21 @@ class RedditPost:
             line = f.readline()
             while line:
                 id = line[:6]
-                submission = self.reddit.submission(id)
-                # submission.comment_sort = "new"
-                submission.comments.replace_more(limit=0)
+                while True:
+                    try:
+                        submission = self.reddit.submission(id)
+                        break
+                    except:
+                        time.sleep(2)
+                try:
+                    submission.comments.replace_more(limit=0)
+                except Forbidden:
+                    print(f"banned on id:{id}!")
+                    line = f.readline()
+                    continue
+                except ServerError:
+                    time.sleep(2)
+                    continue
                 post = {}
                 post["title"] = submission.title
                 post["text"] = submission.selftext.replace("\n", " ")
@@ -66,7 +81,7 @@ class RedditPost:
                 post["comments"] = comments
                 posts.append(post)
                 i+=1
-                if i==10:
+                if i==30:
                     self.flush(file_path, posts)
                     posts = []
                     i=0
@@ -80,11 +95,16 @@ class RedditPost:
 if __name__ == '__main__':
 
     reddit_post = RedditPost()
-    # reddit_post.set_subreddit("GameStop")
-    data_dir = "./gamestop/submissions"
+    data_dir = "./all_reddit/submissions"
     for root, dirs, files in os.walk(data_dir):
         for file in files:
             if file.endswith(".csv"):
                 print(file)
                 submissions_file = os.path.join(root, file)
-                reddit_post.get_new(submissions_file, os.path.join("./", "gamestop", "comments", file[:-3]+"txt"))
+                reddit_post.get_new(submissions_file, os.path.join("./", "all_reddit", "comments", file[:-3]+"txt"))
+
+
+
+
+
+
