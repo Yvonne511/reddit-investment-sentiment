@@ -120,7 +120,7 @@ for file_path in file_path_array:
     print("file processed: " + file_path)
     df_comments = sa.df_comments
     print(df_comments.head())
-    df_comments.to_csv('./data/gme_sentiment_score/'+i+'.csv', index=False)
+    df_comments.to_csv('./data/gme_sentiment_score/'+str(i)+'.csv', index=False)
     i += 1
 
 # df = pd.read_csv('./wsb_sentiment_resampled.csv')
