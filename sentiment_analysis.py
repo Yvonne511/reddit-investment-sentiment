@@ -54,30 +54,39 @@ class sentiment_analysis:
             df.drop(columns=['utc_datetime_str', 'body'], inplace=True)
             df_submissions = pd.concat([df_submissions, df], ignore_index=True)
 
-    def getCommentSentimentScore(self):
+    def getCommentSentimentScore(self, filename):
         ## Part 1: Generate Sentiment Score for each submission
-        cwd = os.getcwd()
-        target_dir = os.path.join(cwd, 'data', 'gme&gamestop', 'comments')
-        file_path_array = []
-        # Get all the files in dir
-        # print(target_dir)
-        for filepath in pathlib.Path(target_dir).glob('**/*'):
-            if filepath.is_file():
-                file_path_array.append(filepath.relative_to(cwd).as_posix())
+        # cwd = os.getcwd()
+        # target_dir = os.path.join(cwd, 'data', 'gme&gamestop', 'comments', 'chunk_group1')
+        # file_path_array = []
+        # # Get all the files in dir
+        # # print(target_dir)
+        # for filepath in pathlib.Path(target_dir).glob('**/*'):
+        #     if filepath.is_file():
+        #         file_path_array.append(filepath.relative_to(cwd).as_posix())
+        file_path_array = [filename]
         for file_path in file_path_array:
-            file_path = os.path.join(cwd, file_path)
-            with open(filepath, 'r') as f:
+            # file_path = os.path.join(cwd, file_path)
+            with open(file_path, 'r') as f:
                 json_list = (''.join(f.readlines())).strip().split('\n')
                 for json_obj in json_list:
                     data = json.loads(json_obj)
                     comments = data['comments']
                     for comment in comments:
+                        if 'to the moon' in comment['text']:
+                            # replce 'to the moon' with 'to_the_moon'
+                            comment['text'] = comment['text'].replace('to the moon', 'to_the_moon')
+                        comment['time'] = datetime.datetime.fromtimestamp(comment['time'])
                         self.df_comments.loc[len(self.df_comments)] = [self.get_sentiment(comment['text']), self.get_updated_sentiment(comment['text']), comment['time']]
                         self.tranverseComments(comment)
 
     def tranverseComments(self, commentObj):
         if len(commentObj['comments']) > 0:
             for comment in commentObj['comments']:
+                if 'to the moon' in comment['text']:
+                    # replce 'to the moon' with 'to_the_moon'
+                    comment['text'] = comment['text'].replace('to the moon', 'to_the_moon')
+                comment['time'] = datetime.datetime.fromtimestamp(comment['time'])
                 self.df_comments.loc[len(self.df_comments)] = [self.get_sentiment(comment['text']), self.get_updated_sentiment(comment['text']), comment['time']]
                 self.tranverseComments(comment)
         else:
@@ -98,9 +107,21 @@ df_gme.set_index('Date', inplace=True)
 print(df_gme.head())
 
 sa = sentiment_analysis()
-sa.getCommentSentimentScore()
-df_comments = sa.df_comments
-print(df_comments.head())
+cwd = os.getcwd()
+target_dir = os.path.join(cwd, 'data', 'gme&gamestop', 'comments')
+file_path_array = []
+for filepath in pathlib.Path(target_dir).glob('**/*'):
+    if filepath.is_file():
+        file_path_array.append(filepath.relative_to(cwd).as_posix())
+i = 0
+for file_path in file_path_array:
+    file_path = os.path.join(cwd, file_path)
+    sa.getCommentSentimentScore(file_path)
+    print("file processed: " + file_path)
+    df_comments = sa.df_comments
+    print(df_comments.head())
+    df_comments.to_csv('./data/gme_sentiment_score/'+i+'.csv', index=False)
+    i += 1
 
 # df = pd.read_csv('./wsb_sentiment_resampled.csv')
 # df_comments = pd.read_csv('./wsb_comment_sentiment.csv')
