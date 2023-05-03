@@ -53,7 +53,7 @@ class RedditPost:
             f.readline()
             line = f.readline()
             while line:
-                id = line[:6]
+                id = line.strip()
                 while True:
                     try:
                         submission = self.reddit.submission(id)
