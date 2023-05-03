@@ -34,26 +34,6 @@ class sentiment_analysis:
     def get_updated_sentiment(self, text):
         return self.updataed_analyzer.polarity_scores(text)["compound"]
 
-    def getSubmissionSentimentScore(self):
-        ## Part 1: Generate Sentiment Score for each submission
-        cwd = os.getcwd()
-        target_dir = os.path.join(cwd, 'data', 'gem&gamestop', 'submissions')
-        file_path_array = []
-        df_submissions = pd.DataFrame()
-        # Get all the files in dir
-        print(target_dir)
-        for filepath in pathlib.Path(target_dir).glob('**/*'):
-            if filepath.is_file() and 'chunk' in filepath and 'csv' in filepath:
-                file_path_array.append(filepath.relative_to(cwd).as_posix())
-        for file_path in file_path_array:
-            file_path = os.path.join(cwd, file_path)
-            df = pd.read_csv(file_path)
-            df['Sentiment_Score'] = df['body'].apply(lambda x: self.get_sentiment(x))
-            df['Updated_Sentiment_Score'] = df['body'].apply(lambda x: self.get_updated_sentiment(x))
-            df["Date"] = df["utc_datetime_str"].apply(lambda x: datetime.datetime.strptime(x, '%Y-%m-%d %H:%M:%S'))
-            df.drop(columns=['utc_datetime_str', 'body'], inplace=True)
-            df_submissions = pd.concat([df_submissions, df], ignore_index=True)
-
     def getCommentSentimentScore(self, filename):
         ## Part 1: Generate Sentiment Score for each submission
         # cwd = os.getcwd()
@@ -71,13 +51,13 @@ class sentiment_analysis:
                 json_list = (''.join(f.readlines())).strip().split('\n')
                 for json_obj in json_list:
                     data = json.loads(json_obj)
-                    comments = data['comments']
-                    for comment in comments:
-                        if 'to the moon' in comment['text']:
-                            # replce 'to the moon' with 'to_the_moon'
-                            comment['text'] = comment['text'].replace('to the moon', 'to_the_moon')
+                    if 'to the moon' in comment['text']:
+                        # replce 'to the moon' with 'to_the_moon'
+                        comment['text'] = comment['text'].replace('to the moon', 'to_the_moon')
                         comment['time'] = datetime.datetime.fromtimestamp(comment['time'])
                         self.df_comments.loc[len(self.df_comments)] = [self.get_sentiment(comment['text']), self.get_updated_sentiment(comment['text']), comment['time']]
+                    comments = data['comments']
+                    for comment in comments:
                         self.tranverseComments(comment)
 
     def tranverseComments(self, commentObj):
@@ -93,22 +73,22 @@ class sentiment_analysis:
             return
 
 # Read JSON file and convert to dataframe
-df_gme = pd.DataFrame()
-with open('./GME.json') as f:
-    gme = json.load(f)
-    df_gme = pd.json_normalize(gme)
-df_gme['Date'] = df_gme['datetime'].apply(lambda x: datetime.datetime.strptime(x, '%Y-%m-%d %H:%M:%S'))
-df_gme['close'] = df_gme['close'].apply(lambda x: float(x))
-df_gme.drop(columns=['datetime'], inplace=True)
-df_gme = df_gme[df_gme['Date'] >= '2021-01-25']
-df_gme = df_gme[df_gme['Date'] <= '2021-02-05']
-df_gme.sort_values(by=['Date'], inplace=True)
-df_gme.set_index('Date', inplace=True)
-print(df_gme.head())
+# df_gme = pd.DataFrame()
+# with open('./GME.json') as f:
+#     gme = json.load(f)
+#     df_gme = pd.json_normalize(gme)
+# df_gme['Date'] = df_gme['datetime'].apply(lambda x: datetime.datetime.strptime(x, '%Y-%m-%d %H:%M:%S'))
+# df_gme['close'] = df_gme['close'].apply(lambda x: float(x))
+# df_gme.drop(columns=['datetime'], inplace=True)
+# df_gme = df_gme[df_gme['Date'] >= '2021-01-25']
+# df_gme = df_gme[df_gme['Date'] <= '2021-02-05']
+# df_gme.sort_values(by=['Date'], inplace=True)
+# df_gme.set_index('Date', inplace=True)
+# print(df_gme.head())
 
 sa = sentiment_analysis()
 cwd = os.getcwd()
-target_dir = os.path.join(cwd, 'data', 'gme&gamestop', 'comments')
+target_dir = os.path.join(cwd, 'data', 'all_reddit_gme&gamestop', 'comments')
 file_path_array = []
 for filepath in pathlib.Path(target_dir).glob('**/*'):
     if filepath.is_file():
