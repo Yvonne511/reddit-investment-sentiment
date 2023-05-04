@@ -34,7 +34,7 @@ df_gme = pd.DataFrame()
 with open('./GME.json') as f:
     gme = json.load(f)
     df_gme = pd.json_normalize(gme)
-df_gme['Date'] = df_gme['datetime'].apply(lambda x: datetime.datetime.strptime(x, '%Y-%m-%d %H:%M:%S'))
+df_gme['Date'] = pd.to_datetime(df_gme['datetime'], format='%Y-%m-%d %H:%M:%S')
 df_gme['close'] = df_gme['close'].apply(lambda x: float(x))
 df_gme.drop(columns=['datetime'], inplace=True)
 df_gme = df_gme[df_gme['Date'] >= '2021-01-25']
@@ -45,31 +45,23 @@ print(df_gme.head())
 
 df = df.join(df_gme, how='left')
 df = df.interpolate(method='linear')
+
+# Get first non NaN value from the close column
+first_non_nan = df['close'].iloc[np.where(df['close'].notnull())[0][0]]
+df = df.fillna(first_non_nan)
 print(df.head())
 
-df = df.fillna(0)
+# # Normalize the sentiment score
+df['N_Updated_Sentiment_Score'] = df['Updated_Sentiment_Score'] / df['Updated_Sentiment_Score'].max()
+df['N_Sentiment_Score'] = df['Sentiment_Score'] / df['Sentiment_Score'].max()
 
-# Check if there is any missing value
-print(df.isnull().sum())
+# print(df.head())
 
-# Visualize the data
-# fig, ax = plt.subplots(figsize=(12, 6))
-# ax.plot(df.index, df['Updated_Sentiment_Score'], color='blue', label='score')
-# ax2 = ax.twinx()
-# ax2.plot(df.index, df['close'], color='red', label='close')
-# ax.legend(loc='upper left')
-# ax2.legend(loc='upper right')
-# plt.show()
-
-# Compute Granger causality using the statsmodels library
-maxlag = 10
-test = 'ssr_chi2test'
-
-granger_test = grangercausalitytests(df[['Sentiment_Score', 'close']], maxlag=maxlag, verbose=False)
-
-# Print the p-values for each lag and interpret the results
-for lag in range(1, maxlag+1):
-    p_value = granger_test[lag][0][test][1]
-    print(f"Lag {lag}: p-value = {p_value:.4f}")
-    if p_value < 0.05:
-        print(f"Lag {lag} is statistically significant.")
+# # Visualize the data
+fig, ax = plt.subplots(figsize=(12, 6))
+ax.plot(df.index, df['N_Updated_Sentiment_Score'], color='blue', label='score')
+ax2 = ax.twinx()
+ax2.plot(df.index, df['close'], color='red', label='close')
+ax.legend(loc='upper left')
+ax2.legend(loc='upper right')
+plt.show()
