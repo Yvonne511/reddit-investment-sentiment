@@ -40,7 +40,7 @@ class sentiment_analysis:
     def get_updated_sentiment(self, text):
         return self.updataed_analyzer.polarity_scores(text)["compound"]
 
-    def get_finbert_sentiment(self, df_list, chunk_size=25):
+    def get_finbert_sentiment(self, df_list, chunk_size=50):
         num_chunks = (len(df_list) + chunk_size - 1) // chunk_size
         all_predictions = []
         for i in range(num_chunks):

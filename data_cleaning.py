@@ -135,7 +135,7 @@ class sentiment_analysis_implement:
     
     def getSentimentData(self):
         cwd = os.getcwd()
-        target_dir = os.path.join(cwd, 'data', 'all_reddit_gme&gamestop', 'comments')
+        target_dir = os.path.join(cwd, 'data', 'gme&gamestop', 'comments')
         file_path_array = []
         for filepath in pathlib.Path(target_dir).glob('**/*'):
             if filepath.is_file():
@@ -162,8 +162,6 @@ class sentiment_analysis_implement:
                     comments = data['comments']
                     for comment in comments:
                         self.tranverseComments(comment)
-                    print(len(self.df_list))
-                    print(self.temp_comments.shape)
                     print(self.df_comments.shape)
                     finbert_sentiment_score = self.sa.get_finbert_sentiment(self.df_list)
                     print(finbert_sentiment_score)
@@ -173,7 +171,7 @@ class sentiment_analysis_implement:
                     self.df_comments = pd.concat([self.df_comments, self.temp_comments])
                     self.temp_comments = pd.DataFrame(columns = ['Sentiment_Score', 'Updated_Sentiment_Score', 'Fintech_Sentiment_Score', 'Date'])
             print('file_path: ', file_path, ' finished')
-            self.df_comments.to_csv('data/cleaned_data/all_gme/'+ self.k+'.csv', index=False)
+            self.df_comments.to_csv('data/cleaned_data/gme/'+ str(self.k)+'.csv', index=False)
             self.df_comments = pd.DataFrame(columns = ['Sentiment_Score', 'Updated_Sentiment_Score', 'Fintech_Sentiment_Score', 'Date'])
             self.k += 1
 sai = sentiment_analysis_implement()
