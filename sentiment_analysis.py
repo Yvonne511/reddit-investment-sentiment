@@ -7,6 +7,7 @@ import json
 import os
 import torch
 import matplotlib.pyplot as plt
+import psutil
 
 class sentiment_analysis:
 
@@ -43,6 +44,7 @@ class sentiment_analysis:
         num_chunks = (len(df_list) + chunk_size - 1) // chunk_size
         all_predictions = []
         for i in range(num_chunks):
+
             start_idx = i * chunk_size
             end_idx = min((i+1) * chunk_size, len(df_list))
             chunk = df_list[start_idx:end_idx]
@@ -51,10 +53,13 @@ class sentiment_analysis:
             # Predict sentiment
             outputs = self.finbert_model(**inputs)
             predictions = torch.nn.functional.softmax(outputs.logits, dim=-1)
-            
-            all_predictions.append(predictions)
+            positive = predictions[:, 0].tolist()
+            negative = predictions[:, 1].tolist()
+            neutral = predictions[:, 2].tolist()
+            finBert_score = [positive[i] - negative[i] for i in range(len(positive))]
+            all_predictions.extend(finBert_score)
         
-        return torch.cat(all_predictions, dim=0)
+        return all_predictions
 
 sa = sentiment_analysis()
 df_comments = pd.DataFrame(columns = ['Sentiment_Score', 'Updated_Sentiment_Score', 'Date'])

@@ -3,6 +3,7 @@ import pathlib
 import json
 import pandas as pd
 import datetime
+import psutil
 # import sentiment analysis class from sentiment_analysis.py
 from sentiment_analysis import sentiment_analysis
 
@@ -162,13 +163,12 @@ class sentiment_analysis_implement:
                     for comment in comments:
                         self.tranverseComments(comment)
                     print(len(self.df_list))
+                    print(self.temp_comments.shape)
                     print(self.df_comments.shape)
-                    finbert_predictions = self.sa.get_finbert_sentiment(self.df_list)
+                    finbert_sentiment_score = self.sa.get_finbert_sentiment(self.df_list)
+                    print(finbert_sentiment_score)
+                    print(len(finbert_sentiment_score))
                     self.df_list = []
-                    postive = finbert_predictions[:, 0].tolist()
-                    negative = finbert_predictions[:, 1].tolist()
-                    neutral = finbert_predictions[:, 2].tolist()
-                    finbert_sentiment_score = [postive[i] - negative[i] for i in range(len(postive))]
                     self.temp_comments['Fintech_Sentiment_Score'] = finbert_sentiment_score
                     self.df_comments = pd.concat([self.df_comments, self.temp_comments])
                     self.temp_comments = pd.DataFrame(columns = ['Sentiment_Score', 'Updated_Sentiment_Score', 'Fintech_Sentiment_Score', 'Date'])
