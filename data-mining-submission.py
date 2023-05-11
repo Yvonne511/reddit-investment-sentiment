@@ -21,8 +21,8 @@ class data_mining_submission:
         data = None
         while not data:
             try:
-                # url = 'https://api.pushshift.io/reddit/search/submission?q='+str(query)+'&subreddit='+str(sub)+'&after='+str(after)+'&before='+str(after+length)+'&size='+str(size)
-                url = 'https://api.pushshift.io/reddit/search/submission?q='+str(query)+'&after='+str(after)+'&before='+str(after+length)+'&size='+str(size)
+                url = 'https://api.pushshift.io/reddit/search/submission?q='+str(query)+'&subreddit='+str(sub)+'&after='+str(after)+'&before='+str(after+length)+'&size='+str(size)
+                # url = 'https://api.pushshift.io/reddit/search/submission?q='+str(query)+'&after='+str(after)+'&before='+str(after+length)+'&size='+str(size)
                 # url = 'https://api.pushshift.io/reddit/search/submission?&subreddit='+str(sub)+'&after='+str(after)+'&before='+str(after+length)+'&size='+str(size)
                 print(url)
                 r = requests.get(url)
@@ -36,16 +36,16 @@ class data_mining_submission:
         return data
 
 data_count = 0
-start_date = datetime.date(2023, 3, 27)
+start_date = datetime.date(2021, 1, 10)
 start_epoch = data_mining_submission().epoch_datatime(start_date)
-end_date = datetime.date(2023, 4, 21)
+end_date = datetime.date(2021, 2, 13)
 end_epoch = data_mining_submission().epoch_datatime(end_date)
 delta = 3600
 data = []
 over500 = 0
 while start_epoch <= end_epoch:
     temp_array = []
-    temp_data = data_mining_submission().getPushshiftData_Submission('nvidia', start_epoch, delta, '', 500)
+    temp_data = data_mining_submission().getPushshiftData_Submission(' GME ', start_epoch, delta, 'wallstreetbets', 500)
     for d in temp_data:
         new_d = {"id":d["id"], "utc_datetime_str":d["utc_datetime_str"], 'upvote_ratio':d['upvote_ratio'], "body":d["selftext"], "title":d["title"]}
         temp_array.append(new_d)
@@ -65,4 +65,4 @@ while start_epoch <= end_epoch:
 print ('Total Data Count: ', data_count)
 print ('Over 500: ', over500)
 df = pd.DataFrame(data)
-df.to_csv('./data-submission/allreddit_submission_4_28_nvidia.csv', index=False)
+df.to_csv('./data-submission/wsb_submission_5_3_%20GME%20.csv', index=False)

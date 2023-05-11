@@ -7,69 +7,72 @@ import matplotlib.pyplot as plt
 import datetime
 from statsmodels.tsa.stattools import grangercausalitytests
 
-# Load the data into a pandas dataframe
 cwd = os.getcwd()
-target_dir = os.path.join(cwd, 'data', 'gme_sentiment_score', 'allreddit_gme')
-file_path_array = []
-for filepath in pathlib.Path(target_dir).glob('**/*'):
-    if filepath.is_file():
-        file_path_array.append(filepath.relative_to(cwd).as_posix())
-df = pd.DataFrame()
-for file_path in file_path_array:
-    file_path = os.path.join(cwd, file_path)
-    df_temp = pd.read_csv(file_path)
-    df = pd.concat([df, df_temp], ignore_index=True)
+file_path = os.path.join(cwd, 'data', 'final', 'gme_wsb.csv')
+df = pd.read_csv(file_path)
 
-print(df.shape)
-# Sum by minute
-df['Date'] = pd.to_datetime(df['Date'])
-# Filter time range from 2021, 1, 25 to 2021, 2, 5
-df = df[(df['Date'] >= '2021-01-25') & (df['Date'] <= '2021-02-05')]
-print(df.shape)
-df = df.set_index('Date')
-df = df.resample('1T').sum()
-
-# Add a column with closing prices from the stock market
-df_gme = pd.DataFrame()
-with open('./GME.json') as f:
-    gme = json.load(f)
-    df_gme = pd.json_normalize(gme)
-df_gme['Date'] = df_gme['datetime'].apply(lambda x: datetime.datetime.strptime(x, '%Y-%m-%d %H:%M:%S'))
-df_gme['close'] = df_gme['close'].apply(lambda x: float(x))
-df_gme.drop(columns=['datetime'], inplace=True)
-df_gme = df_gme[df_gme['Date'] >= '2021-01-25']
-df_gme = df_gme[df_gme['Date'] <= '2021-02-05']
-df_gme.sort_values(by=['Date'], inplace=True)
-df_gme.set_index('Date', inplace=True)
-print(df_gme.head())
-
-df = df.join(df_gme, how='left')
 df = df.interpolate(method='linear')
-print(df.head())
+first_non_nun_close = df['close'][df['close'].first_valid_index()]
+df['close'] = df['close'].fillna(value=first_non_nun_close)
 
-df = df.fillna(0)
+df = df.set_index('Date')
+df.index = pd.to_datetime(df.index)
 
-# Check if there is any missing value
-print(df.isnull().sum())
+# sum up by 10 minutes
+resampled = df.resample('1440T').agg({'Sentiment_Score': 'sum', 'Updated_Sentiment_Score': 'sum', 'Fintech_Sentiment_Score': 'sum',  'close': 'mean'})
+df = resampled
 
-# Visualize the data
-# fig, ax = plt.subplots(figsize=(12, 6))
-# ax.plot(df.index, df['Updated_Sentiment_Score'], color='blue', label='score')
-# ax2 = ax.twinx()
-# ax2.plot(df.index, df['close'], color='red', label='close')
-# ax.legend(loc='upper left')
-# ax2.legend(loc='upper right')
+print(df.columns)
+
+# # Visualize the data
+# fig, ax1 = plt.subplots()
+# ax1.plot(df.index, df['Sentiment_Score'], color='blue')
+# ax1.set_xlabel('Date')
+# ax1.set_ylabel('Sentiment Score', color='blue')
+
+# ax2 = ax1.twinx()
+# ax2.plot(df.index, df['close'], color='red')
+# ax2.set_ylabel('Stock Price', color='red')
+
 # plt.show()
 
-# Compute Granger causality using the statsmodels library
-maxlag = 10
-test = 'ssr_chi2test'
 
-granger_test = grangercausalitytests(df[['Sentiment_Score', 'close']], maxlag=maxlag, verbose=False)
+## fourier transform
+close_fft = np.fft.fft(np.asarray(df['Sentiment_Score'].tolist()))
+fft_df = pd.DataFrame({'fft':close_fft})
+fft_df['absolute'] = fft_df['fft'].apply(lambda x: np.abs(x))
+fft_df['angle'] = fft_df['fft'].apply(lambda x: np.angle(x))
+fft_list = np.asarray(fft_df['fft'].tolist())
 
-# Print the p-values for each lag and interpret the results
-for lag in range(1, maxlag+1):
-    p_value = granger_test[lag][0][test][1]
-    print(f"Lag {lag}: p-value = {p_value:.4f}")
-    if p_value < 0.05:
-        print(f"Lag {lag} is statistically significant.")
+for num_ in [5, 10, 15, 20]:
+    fft_list_m10= np.copy(fft_list); fft_list_m10[num_:-num_]=0
+    df['fourier '+str(num_)]=np.fft.ifft(fft_list_m10)
+    
+# Visualize the data
+# fig, ax1 = plt.subplots()
+# ## df[['fourier 5', 'fourier 10', 'fourier 15', 'fourier 20']]
+# ax1.plot(df.index, df['fourier 20'], color='blue')
+# ax1.set_xlabel('Date')
+# ax1.set_ylabel('Sentiment Score', color='blue')
+
+# ax2 = ax1.twinx()
+# ax2.plot(df.index, df['close'], color='red')
+# ax2.set_ylabel('Close', color='red')
+
+# plt.show()
+
+
+
+
+# # Compute Granger causality using the statsmodels library
+# maxlag = 5
+# test = 'ssr_chi2test'
+
+# granger_test = grangercausalitytests(df[['Fintech_Sentiment_Score', 'close']], maxlag=maxlag, verbose=False)
+
+# # Print the p-values for each lag and interpret the results
+# for lag in range(1, maxlag+1):
+#     p_value = granger_test[lag][0][test][1]
+#     print(f"Lag {lag}: p-value = {p_value:.5f}")
+#     if p_value < 0.05:
+#         print(f"Lag {lag} is statistically significant.")

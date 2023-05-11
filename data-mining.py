@@ -57,8 +57,8 @@ class data_mining:
 
 time_period = 60
 data_count = 0
-start_date = datetime.date(2021, 1, 25)
-end_date = datetime.date(2021, 2, 5)
+start_date = datetime.date(2021, 1, 11)
+end_date = datetime.date(2021, 2, 12)
 delta = datetime.timedelta(days=1)
 current_date = start_date
 while current_date <= end_date:
