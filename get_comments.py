@@ -95,7 +95,7 @@ class RedditPost:
 if __name__ == '__main__':
 
     reddit_post = RedditPost()
-    data_dir = "all_reddit"
+    data_dir = "netflix"
     for root, dirs, files in os.walk(os.path.join(data_dir, "submissions")):
         for file in files:
             if file.endswith(".csv"):

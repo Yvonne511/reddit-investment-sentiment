@@ -34,16 +34,17 @@ Inspired by GameStop Short Squeeze, our team wants to analyze the ability to use
 2. how to <span style="color:red">filter</span> relevant comments
 
 There are a few files that we use to collect data:
-1. data-mining-submission.py: it gets all the reddit posts with keywords or from which subreddit
-2. get_comments.py: it gets all the sub comments from each reddit posts using PRAW
+1. `data-mining-submission.py`: it gets all the reddit posts with keywords or from which subreddit. Change parameters in line 39, 40, 41.
+2. `get_comments.py`: it gets all the sub comments from each reddit posts using PRAW. Change parameters in line 98. For PRAW, you have to apply for token on reddit website, and add `client_id, client_secret, and user_agent` in `config.toml`.
 
 ## Sentiment Analysis:
 
-check file: sentiment_analysis.py
+run ```data_cleaning.py``` followed by the company folder name, like ```data_cleaning.py netflix```. This will get data from ```./data/netflix/```, do sentiment analysis, and generate results in ```./data/cleaned_data/netflix/```. We run this step in Greene with GPU.  
+We also use ```data_visual.py``` to combine stock price and sentiment score together, in ```data/final/```.
 
 ## Causality Analysis
 
-It uses files from data/final/..
+It uses files from `data/final/.`.
 
 1. Correlation Analysis:
 https://www.kaggle.com/code/yvonnewu511/lstm-reddit
@@ -51,10 +52,15 @@ This is from Kaggle notebook. The colab notebook is also downloaded called corre
 
 2. Causality Analysis:
 check file: granger_causality.py
-It can be used to process other companies' granger causality by changing the line:
-
-`file_path = os.path.join(cwd, 'data', 'final', 'gme_wsb.csv')`
+It can be used to process other companies' granger causality by changing the line:`file_path = os.path.join(cwd, 'data', 'final', 'gme_wsb.csv')`
 
 ## Modeling:
+all data in folder ```./data_sentiment_score```
+1. pre processing  
+We will do some data prepare for LSTM in folder ```./data_sentiment_score```. There is a folder for each company as the company's name. I will use Netflix as example. ```./netflix/netflix``` contain all the sentiment score from Netflix, ```./netflix/NFLX.csv``` contain all stock price from Netflix. Then we used ```./preprocessing_sentiment.py``` and ```./preprocessing_stock.py``` to pre-process the data, and generated ```./netflix/netflix.csv``` and ```./netflix/price.csv```. These two file will be sent to our LSTM model. The other 3 companies is generated as the same.  
+2. model trining
+We used a Jupyter Notebook to train our model, named ```./lstm.ipynb```. ```x1,y1``` corrisponding to data of Gamestop; ```x2,y2``` is Netflix; ```x3,y3``` is Nvidia, ```x4,y4``` is Tesla. Then we combine different set of companies as training set using ```np.concatenate()```. 
+3. evaluation
+In ```./lstm.ipynb```, we use ```calculate_mape()``` to calculate the MAPE; we used ```predict_period()``` to predict the movement of the stock price. For example, if we train the data using ```x1/2/3 and y1/2/3```, we can run ```predict_period(x4[-200:], y4[-200:])``` to predict the last 200 time period of Tesla's stock price.
 
 

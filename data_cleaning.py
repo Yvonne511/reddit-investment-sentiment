@@ -4,6 +4,7 @@ import json
 import pandas as pd
 import datetime
 import psutil
+import sys
 # import sentiment analysis class from sentiment_analysis.py
 from sentiment_analysis import sentiment_analysis
 
@@ -33,7 +34,7 @@ class data_understanding:
     
     def countData(self):
         cwd = os.getcwd()
-        target_dir = os.path.join(cwd, 'data', 'gme&gamestop', 'comments')
+        target_dir = os.path.join(cwd, 'data', folder, 'comments')
         file_path_array = []
         for filepath in pathlib.Path(target_dir).glob('**/*'):
             if filepath.is_file():
@@ -64,28 +65,6 @@ class data_understanding:
 # du = data_understanding()
 # du.countData()
 
-class data_understanding_new:
-
-# 1. How many data points are there in total?
-    total_data_count = 0
-    
-    def countData(self):
-        cwd = os.getcwd()
-        target_dir = os.path.join(cwd, 'data', 'data_sentiment_score', 'gme_wsb')
-        file_path_array = []
-        for filepath in pathlib.Path(target_dir).glob('**/*'):
-            if filepath.is_file():
-                file_path_array.append(filepath.relative_to(cwd).as_posix())
-        for file_path in file_path_array:
-            file_path = os.path.join(cwd, file_path)
-            # Open csv file
-            csv_file = pd.read_csv(file_path)
-            self.total_data_count+=csv_file.shape[0]       
-        print(self.total_data_count)   
-            
-dun = data_understanding_new()
-dun.countData()
-
 class data_cleaning:
 
     df_comments = pd.DataFrame(columns = ['text', 'date'])
@@ -106,7 +85,7 @@ class data_cleaning:
     
     def cleanData(self):
         cwd = os.getcwd()
-        target_dir = os.path.join(cwd, 'data', 'all_reddit_gme&gamestop', 'comments')
+        target_dir = os.path.join(cwd, 'data', folder, 'comments')
         file_path_array = []
         for filepath in pathlib.Path(target_dir).glob('**/*'):
             if filepath.is_file():
@@ -128,7 +107,7 @@ class data_cleaning:
                     for comment in comments:
                         self.tranverseComments(comment)
             print('file_path: ', file_path, ' finished')
-            self.df_comments.to_csv('data/cleaned_data/all_gme/'+str(self.i)+'.csv', index=False)
+            self.df_comments.to_csv(f'data/cleaned_data/{folder}/'+str(self.i)+'.csv', index=False)
             self.i += 1
 
 class sentiment_analysis_implement:
@@ -157,7 +136,7 @@ class sentiment_analysis_implement:
     
     def getSentimentData(self):
         cwd = os.getcwd()
-        target_dir = os.path.join(cwd, 'data', 'gme&gamestop', 'comments')
+        target_dir = os.path.join(cwd, 'data', folder, 'comments')
         file_path_array = []
         for filepath in pathlib.Path(target_dir).glob('**/*'):
             if filepath.is_file():
@@ -184,17 +163,21 @@ class sentiment_analysis_implement:
                     comments = data['comments']
                     for comment in comments:
                         self.tranverseComments(comment)
-                    print(self.df_comments.shape)
+                    # print(self.df_comments.shape)
                     finbert_sentiment_score = self.sa.get_finbert_sentiment(self.df_list)
-                    print(finbert_sentiment_score)
-                    print(len(finbert_sentiment_score))
+                    # print(finbert_sentiment_score)
+                    # print(len(finbert_sentiment_score))
                     self.df_list = []
                     self.temp_comments['Fintech_Sentiment_Score'] = finbert_sentiment_score
                     self.df_comments = pd.concat([self.df_comments, self.temp_comments])
                     self.temp_comments = pd.DataFrame(columns = ['Sentiment_Score', 'Updated_Sentiment_Score', 'Fintech_Sentiment_Score', 'Date'])
             print('file_path: ', file_path, ' finished')
-            self.df_comments.to_csv('data/cleaned_data/gme/'+ str(self.k)+'.csv', index=False)
+            file_name = file_path.split("/")[-1][:-4]
+            self.df_comments.to_csv(f'data/cleaned_data/{folder}/'+ file_name +'.csv', index=False)
             self.df_comments = pd.DataFrame(columns = ['Sentiment_Score', 'Updated_Sentiment_Score', 'Fintech_Sentiment_Score', 'Date'])
             self.k += 1
-# sai = sentiment_analysis_implement()
-# sai = sai.getSentimentData()
+
+if __name__ == '__main__':
+    folder = sys.argv[1]
+    sai = sentiment_analysis_implement()
+    sai = sai.getSentimentData()

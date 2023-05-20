@@ -37,15 +37,16 @@ class data_mining_submission:
 
 data_count = 0
 start_date = datetime.date(2021, 1, 10)
-start_epoch = data_mining_submission().epoch_datatime(start_date)
 end_date = datetime.date(2021, 2, 13)
+keyword = ' GME '
+start_epoch = data_mining_submission().epoch_datatime(start_date)
 end_epoch = data_mining_submission().epoch_datatime(end_date)
 delta = 3600
 data = []
 over500 = 0
 while start_epoch <= end_epoch:
     temp_array = []
-    temp_data = data_mining_submission().getPushshiftData_Submission(' GME ', start_epoch, delta, 'wallstreetbets', 500)
+    temp_data = data_mining_submission().getPushshiftData_Submission(keyword, start_epoch, delta, 'wallstreetbets', 500)
     for d in temp_data:
         new_d = {"id":d["id"], "utc_datetime_str":d["utc_datetime_str"], 'upvote_ratio':d['upvote_ratio'], "body":d["selftext"], "title":d["title"]}
         temp_array.append(new_d)
