@@ -64,6 +64,28 @@ class data_understanding:
 # du = data_understanding()
 # du.countData()
 
+class data_understanding_new:
+
+# 1. How many data points are there in total?
+    total_data_count = 0
+    
+    def countData(self):
+        cwd = os.getcwd()
+        target_dir = os.path.join(cwd, 'data', 'data_sentiment_score', 'gme_wsb')
+        file_path_array = []
+        for filepath in pathlib.Path(target_dir).glob('**/*'):
+            if filepath.is_file():
+                file_path_array.append(filepath.relative_to(cwd).as_posix())
+        for file_path in file_path_array:
+            file_path = os.path.join(cwd, file_path)
+            # Open csv file
+            csv_file = pd.read_csv(file_path)
+            self.total_data_count+=csv_file.shape[0]       
+        print(self.total_data_count)   
+            
+dun = data_understanding_new()
+dun.countData()
+
 class data_cleaning:
 
     df_comments = pd.DataFrame(columns = ['text', 'date'])
@@ -174,5 +196,5 @@ class sentiment_analysis_implement:
             self.df_comments.to_csv('data/cleaned_data/gme/'+ str(self.k)+'.csv', index=False)
             self.df_comments = pd.DataFrame(columns = ['Sentiment_Score', 'Updated_Sentiment_Score', 'Fintech_Sentiment_Score', 'Date'])
             self.k += 1
-sai = sentiment_analysis_implement()
-sai = sai.getSentimentData()
+# sai = sentiment_analysis_implement()
+# sai = sai.getSentimentData()
